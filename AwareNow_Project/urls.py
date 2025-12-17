@@ -25,7 +25,7 @@ urlpatterns = [
     path('',include('account.urls')),
     path('campaigns/', include('campaigns.urls')),
     path('',include('courses.urls')),
-    # path('',include('policies.urls')),
+    path('',include('policies.urls')),
 ]
 
 # Serve media files in development
