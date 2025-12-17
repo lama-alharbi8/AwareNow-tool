@@ -1,20 +1,25 @@
 from django.contrib.auth import authenticate, login
 from django.shortcuts import render, redirect
-from django.contrib.auth.decorators import login_required
 from .forms import CompanyForm
 from django.contrib.auth.decorators import login_required
 import uuid
 from .forms import SuperAdminForm
 from .models import Company
 from .services import send_activation_email
-
+from django.shortcuts import get_object_or_404
 
 # ==== admin platform login ====
 @login_required
 def platform_dashboard(request):
+    if not request.user.is_superuser:
+        return redirect("account:platform-login")
+
     return render(request, "account/platform_dashboard.html")
 
 def platform_login(request):
+    # اذا مسجل دخول ينقله لصفحة الدشبورد للبلاتفورم 
+    # if request.user.is_authenticated and request.user.is_superuser:
+    #     return redirect("account:platform-dashboard")
     if request.method == "POST":
         username = request.POST.get("username")
         password = request.POST.get("password")
@@ -40,7 +45,9 @@ def create_company(request):
     if request.method == "POST":
         form = CompanyForm(request.POST)
         if form.is_valid():
-            company = form.save()
+            # company = form.save()
+            company = form.save(commit=False)
+            company.save()
             # create superadmin for company
             return redirect("account:create-super-admin", company_id=company.id)
     else:
@@ -53,7 +60,7 @@ def create_super_admin(request, company_id):
     if not request.user.is_superuser:
         return redirect("account:platform-login")
 
-    company = Company.objects.get(id=company_id)
+    company = get_object_or_404(Company, id=company_id)
 
     if request.method == "POST":
         form = SuperAdminForm(request.POST)
@@ -80,56 +87,4 @@ def create_super_admin(request, company_id):
     })
 
 
-
-# import uuid
-# from django.shortcuts import render, redirect
-# from django.http import HttpResponse
-# from django.contrib.auth import get_user_model
-# from django.utils import timezone
-# from django.core.mail import send_mail
-# from django.views.decorators.csrf import csrf_exempt
-
-# User = get_user_model()
-
-# def send_activation_email(user):
-#     activation_link = f"http://127.0.0.1:8000/account/activate/{user.activation_token}/"
-
-#     send_mail(
-#         subject="Activate your AwareNow account",
-#         message=f"Click the link to activate your account:\n{activation_link}",
-#         from_email=None,
-#         recipient_list=[user.email],
-#     )
-
-# @csrf_exempt
-# def activate_account(request, token):
-#     try:
-#         user = User.objects.get(activation_token=token)
-#     except User.DoesNotExist:
-#         return HttpResponse("Invalid activation link", status=400)
-
-#     if request.method == "POST":
-#         password = request.POST.get("password")
-#         department = request.POST.get("department")
-
-#         if not password or not department:
-#             return HttpResponse("All fields are required", status=400)
-
-#         user.set_password(password)
-#         user.department = department
-#         user.is_active = True
-#         user.activation_token = None
-#         user.save()
-
-#         return HttpResponse("Account activated successfully. You can now log in.")
-
-#     # GET request (صفحة بسيطة جدًا)
-#     return HttpResponse("""
-#         <h2>Activate Account</h2>
-#         <form method="post">
-#             <input type="password" name="password" placeholder="Password" required /><br><br>
-#             <input type="text" name="department" placeholder="Department" required /><br><br>
-#             <button type="submit">Activate</button>
-#         </form>
-#     """)
 
