@@ -1,127 +1,219 @@
-{% extends 'core/base.html' %}
+{% extends "core/base.html" %}
 {% load static %}
 
-{% block title %}{% if is_edit %}Edit Course{% else %}Create Course{% endif %}{% endblock %}
+{% block title %}Create Course{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">
-                        {% if is_edit %}
-                            Edit Course: {{ course.title }}
-                        {% else %}
-                            Create New Course
-                        {% endif %}
-                    </h4>
-                </div>
-                <div class="card-body">
-                    <form method="post" enctype="multipart/form-data">
-                        {% csrf_token %}
-                        
-                        <!-- Title -->
-                        <div class="mb-3">
-                            <label class="form-label">Course Title *</label>
-                            {{ form.title }}
-                            {% if form.title.errors %}
-                            <div class="text-danger">{{ form.title.errors }}</div>
-                            {% endif %}
+<div class="container" style="max-width: 900px;">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-0">Create Course</h3>
+            <small class="text-muted">Create a new course for the platform.</small>
+        </div>
+        <a href="{% url 'courses:platform_admin_dashboard' %}" class="btn btn-outline-dark">
+            Back
+        </a>
+    </div>
+
+    <!-- ✅ Success Message Only -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} mb-3">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post" class="row g-4" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- ================= Course Info ================= -->
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="fw-semibold mb-3">Course Information</h5>
+
+                    <!-- Course Title -->
+                    <div class="mb-3">
+                        <label class="form-label small">Course Title *</label>
+                        <input
+                            type="text"
+                            name="title"
+                            value="{{ form.title.value|default:'' }}"
+                            class="form-control {% if form.title.errors %}is-invalid{% endif %}"
+                            required
+                        >
+                        {% for error in form.title.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Brief Description -->
+                    <div class="mb-3">
+                        <label class="form-label small">Brief Description</label>
+                        <textarea
+                            name="brief_description"
+                            rows="3"
+                            class="form-control {% if form.brief_description.errors %}is-invalid{% endif %}"
+                        >{{ form.brief_description.value|default:'' }}</textarea>
+                        {% for error in form.brief_description.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Category & Thumbnail -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small">Category</label>
+                            <select
+                                name="category"
+                                class="form-select {% if form.category.errors %}is-invalid{% endif %}"
+                            >
+                                <option value="">Select Category</option>
+                                {% for option in form.category.field.choices %}
+                                    <option value="{{ option.0 }}" 
+                                        {% if form.category.value == option.0|stringformat:"s" %}selected{% endif %}>
+                                        {{ option.1 }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            {% for error in form.category.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
                         </div>
-                        
-                        <!-- Description -->
-                        <div class="mb-3">
-                            <label class="form-label">Brief Description</label>
-                            {{ form.brief_description }}
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small">Thumbnail Image</label>
+                            <input
+                                type="file"
+                                name="thumbnail"
+                                class="form-control {% if form.thumbnail.errors %}is-invalid{% endif %}"
+                                accept="image/*"
+                            >
+                            {% for error in form.thumbnail.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
                         </div>
-                        
-                        <!-- Category & Thumbnail -->
-                        <div class="row mb-3">
-                            <!-- <div class="col-md-6">
-                                <label class="form-label">Category</label>
-                                {{ form.category }}
-                            </div> -->
-                            <div class="col-md-6">
-                                <label class="form-label">Thumbnail Image</label>
-                                {{ form.thumbnail }}
-                            </div>
-                        </div>
-                        
-                        <!-- Video Info -->
-                        <div class="row mb-3">
-                            <div class="col-md-8">
-                                <label class="form-label">Video URL</label>
-                                {{ form.video_url }}
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Duration (minutes)</label>
-                                {{ form.video_duration_minutes }}
-                            </div>
-                        </div>
-                        
-                        <!-- Settings -->
-                        <div class="row mb-3">
-                            <div class="col-md-4">
-                                <label class="form-label">Visibility</label>
-                                {{ form.visibility }}
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Points Reward</label>
-                                {{ form.points_reward }}
-                            </div>
-                            <div class="col-md-4">
-                                <div class="form-check mt-4">
-                                    {{ form.is_published }}
-                                    <label class="form-check-label">Publish Now</label>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Buttons -->
-                        <div class="d-flex justify-content-between">
-                            <a href="{% url 'courses:platform_admin_dashboard' %}" 
-                               class="btn btn-outline-secondary">Cancel</a>
-                            
-                            <div>
-                                {% if is_edit %}
-                                <button type="submit" class="btn btn-primary">
-                                    Update Course
-                                </button>
-                                {% else %}
-                                <button type="submit" name="save" class="btn btn-primary">
-                                    Save Course
-                                </button>
-                                <button type="submit" name="save_and_assign" class="btn btn-success">
-                                    Save & Assign
-                                </button>
-                                {% endif %}
-                            </div>
-                        </div>
-                    </form>
+                    </div>
+
                 </div>
             </div>
         </div>
-    </div>
-</div>
-{% endblock %}
 
-{% block extra_js %}
-<script>
-    // Add Bootstrap classes to form fields
-    document.addEventListener('DOMContentLoaded', function() {
-        const inputs = document.querySelectorAll('input, select, textarea');
-        inputs.forEach(input => {
-            if (input.type !== 'checkbox') {
-                input.classList.add('form-control');
-            }
-        });
-        
-        // Add class to checkboxes
-        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
-        checkboxes.forEach(cb => {
-            cb.classList.add('form-check-input');
-        });
-    });
-</script>
+        <!-- ================= Video Information ================= -->
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="fw-semibold mb-3">Video Information</h5>
+
+                    <!-- Video URL -->
+                    <div class="mb-3">
+                        <label class="form-label small">Video URL *</label>
+                        <input
+                            type="url"
+                            name="video_url"
+                            value="{{ form.video_url.value|default:'' }}"
+                            class="form-control {% if form.video_url.errors %}is-invalid{% endif %}"
+                            required
+                        >
+                        {% for error in form.video_url.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Duration -->
+                    <div class="mb-3">
+                        <label class="form-label small">Duration (minutes) *</label>
+                        <input
+                            type="number"
+                            name="video_duration_minutes"
+                            value="{{ form.video_duration_minutes.value|default:'' }}"
+                            class="form-control {% if form.video_duration_minutes.errors %}is-invalid{% endif %}"
+                            min="1"
+                            required
+                        >
+                        {% for error in form.video_duration_minutes.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= Course Settings ================= -->
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="fw-semibold mb-3">Course Settings</h5>
+
+                    <!-- Visibility & Points -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small">Visibility</label>
+                            <select
+                                name="visibility"
+                                class="form-select {% if form.visibility.errors %}is-invalid{% endif %}"
+                            >
+                                {% for option in form.visibility.field.choices %}
+                                    <option value="{{ option.0 }}" 
+                                        {% if form.visibility.value == option.0|stringformat:"s" %}selected{% endif %}>
+                                        {{ option.1 }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            {% for error in form.visibility.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label small">Points Reward</label>
+                            <input
+                                type="number"
+                                name="points_reward"
+                                value="{{ form.points_reward.value|default:'10' }}"
+                                class="form-control {% if form.points_reward.errors %}is-invalid{% endif %}"
+                                min="0"
+                            >
+                            {% for error in form.points_reward.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Publish Checkbox -->
+                    <div class="form-check">
+                        <input
+                            type="checkbox"
+                            name="is_published"
+                            class="form-check-input {% if form.is_published.errors %}is-invalid{% endif %}"
+                            id="is_published"
+                            {% if form.is_published.value %}checked{% endif %}
+                        >
+                        <label class="form-check-label small" for="is_published">
+                            Publish Immediately
+                        </label>
+                        {% for error in form.is_published.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit -->
+        <div class="col-12 d-flex justify-content-end gap-2">
+            <button type="submit" name="save" class="btn btn-dark px-4">
+                Save Course
+            </button>
+            <button type="submit" name="save_and_assign" class="btn btn-success px-4">
+                Save & Assign
+            </button>
+        </div>
+
+    </form>
+</div>
 {% endblock %}

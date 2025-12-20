@@ -1,0 +1,163 @@
+{% extends "core/base.html" %}
+
+{% block title %}Courses Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-0">Courses Dashboard</h3>
+            <small class="text-muted">
+                Manage and create courses
+            </small>
+        </div>
+
+        <a href="{% url 'courses:create_course' %}" class="btn btn-dark">
+            + Create Course
+        </a>
+    </div>
+
+    <!-- Course Cards Section -->
+    <div class="mb-5">
+        <h5 class="fw-semibold mb-3">Courses Overview</h5>
+
+        <div class="row">
+            {% for course in courses|slice:":6" %}
+            <div class="col-md-4 mb-3">
+                <div class="card border-0 shadow-sm p-3 h-100">
+                    <div class="d-flex align-items-start mb-2">
+                        {% if course.thumbnail %}
+                        <img src="{{ course.thumbnail.url }}" alt="{{ course.title }}" 
+                             class="rounded me-3" width="60" height="60">
+                        {% else %}
+                        <div class="bg-light rounded d-flex align-items-center justify-content-center me-3" 
+                             style="width: 60px; height: 60px;">
+                            <i class="fas fa-video text-muted"></i>
+                        </div>
+                        {% endif %}
+                        <div>
+                            <h6 class="fw-bold mb-1">{{ course.title }}</h6>
+                            <small class="text-muted">
+                                {{ course.created_at|date:"M d, Y" }}
+                            </small>
+                        </div>
+                    </div>
+
+                    <p class="text-muted mb-2 small">
+                        {{ course.brief_description|truncatechars:80 }}
+                    </p>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-light text-dark">
+                            {{ course.video_duration_minutes }} min
+                        </span>
+                        <span class="badge {% if course.is_published %}bg-success{% else %}bg-secondary{% endif %}">
+                            {% if course.is_published %}Published{% else %}Draft{% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="card border-0 shadow-sm p-5 text-center">
+                    <p class="text-muted mb-0">No courses available yet</p>
+                    <a href="{% url 'courses:create_course' %}" class="btn btn-dark mt-3">
+                        Create Your First Course
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+
+
+    <!-- Courses Table Section -->
+    <div>
+        <!-- Courses Header + Filters -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+
+            <!-- Title -->
+            <h5 class="fw-semibold mb-0">All Courses</h5>
+
+            <!-- Filters -->
+            <form method="get" class="d-flex gap-2">
+                <!-- Status Filter -->
+                <select name="status" class="form-select form-select-sm">
+                    <option value="">All Status</option>
+                    <option value="published" {% if request.GET.status == "published" %}selected{% endif %}>
+                        Published
+                    </option>
+                    <option value="draft" {% if request.GET.status == "draft" %}selected{% endif %}>
+                        Draft
+                    </option>
+                </select>
+
+                <!-- Submit -->
+                <button type="submit" class="btn btn-sm btn-outline-dark">
+                    Filter
+                </button>
+            </form>
+
+        </div>
+
+
+        <div class="card border-0 shadow-sm">
+            <table class="table mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Course Title</th>
+                        <th>Category</th>
+                        <th>Duration</th>
+                        <th>Created By</th>
+                        <th>Created At</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for course in courses %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                {% if course.thumbnail %}
+                                <img src="{{ course.thumbnail.url }}" alt="{{ course.title }}" 
+                                     class="rounded me-2" width="40" height="40">
+                                {% endif %}
+                                <strong>{{ course.title }}</strong>
+                            </div>
+                        </td>
+                        <td>
+                            {% if course.category %}
+                                <span class="badge bg-light text-dark">{{ course.category.name }}</span>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ course.video_duration_minutes }} min</td>
+                        <td>{{ course.created_by.username|default:"System" }}</td>
+                        <td>{{ course.created_at|date:"Y-m-d" }}</td>
+                        <td>
+                            {% if course.is_published %}
+                                <span class="badge bg-success">Published</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Draft</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">
+                            No courses found
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+    </div>
+
+</div>
+{% endblock %}

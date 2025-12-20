@@ -89,7 +89,7 @@
 
         <li class="nav-item">
           <a class="nav-link nav-secondary {% if request.resolver_match.app_name == 'courses' and request.resolver_match.url_name != 'platform_admin_dashboard' %}active-nav{% endif %}"
-              href="{% url 'courses:create_course' %}">
+              href="{% url 'courses:courses_dashboard' %}">
               Course
           </a>
         </li>

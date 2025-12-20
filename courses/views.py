@@ -151,6 +151,9 @@ def platform_admin_dashboard(request):
 @login_required
 @platform_admin_required
 def create_course(request):
+    # Get all existing courses for the table (only when not in edit mode)
+    courses = Course.objects.all().order_by('-created_at')  # Show newest first
+    
     if request.method == 'POST':
         form = CourseForm(request.POST, request.FILES)
         if form.is_valid():
@@ -170,35 +173,73 @@ def create_course(request):
     else:
         form = CourseForm()
     
+    # Render with all necessary context
     return render(request, 'courses/create_course.html', {
         'form': form,
-        # REMOVED: 'user': request.user,  # Not needed
+        'courses': courses,  # For the courses table
+        'is_edit': False,    # Important: tells template this is create mode
     })
 
 # ==================== COURSE EDITING ====================
 @login_required
 @platform_admin_required
 def edit_course(request, course_id):
-    course = get_object_or_404(Course, id=course_id)
-    
-    if not (request.user == course.created_by or request.user.is_superuser):
-        messages.error(request, 'You can only edit courses you created.')
+    try:
+        course = Course.objects.get(id=course_id)
+    except Course.DoesNotExist:
+        messages.error(request, '❌ Course not found.')
         return redirect('courses:platform_admin_dashboard')
     
     if request.method == 'POST':
         form = CourseForm(request.POST, request.FILES, instance=course)
         if form.is_valid():
-            updated_course = form.save()
+            updated_course = form.save(commit=False)
+            
+            # Handle publish date
+            if updated_course.is_published and not updated_course.published_at:
+                updated_course.published_at = timezone.now()
+            
+            updated_course.save()
             messages.success(request, f'✅ Course "{updated_course.title}" updated!')
             return redirect('courses:platform_admin_dashboard')
     else:
         form = CourseForm(instance=course)
     
+    # Render edit template
     return render(request, 'courses/create_course.html', {
         'form': form,
-        'course': course,
-        'is_edit': True,
-        # REMOVED: 'user': request.user,  # Not needed
+        'course': course,    # Current course being edited
+        'is_edit': True,     # Important: tells template this is edit mode
+        # Don't need 'courses' in edit mode since table won't show
+    })
+
+@login_required
+@platform_admin_required
+def courses_dashboard(request):
+    # Get all courses
+    courses = Course.objects.all().order_by('-created_at')
+    
+    # Get categories with course counts
+    categories = CourseCategory.objects.annotate(
+        course_count=Count('course')
+    )
+    
+    # Apply filters if provided
+    status_filter = request.GET.get('status')
+    category_filter = request.GET.get('category')
+    
+    if status_filter:
+        if status_filter == 'published':
+            courses = courses.filter(is_published=True)
+        elif status_filter == 'draft':
+            courses = courses.filter(is_published=False)
+    
+    if category_filter:
+        courses = courses.filter(category_id=category_filter)
+    
+    return render(request, 'courses/courses_dashboard.html', {
+        'courses': courses,
+        'categories': categories,
     })
 
 # ==================== COURSE ASSIGNMENT ====================
