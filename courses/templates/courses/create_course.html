@@ -38,10 +38,10 @@
                         
                         <!-- Category & Thumbnail -->
                         <div class="row mb-3">
-                            <div class="col-md-6">
+                            <!-- <div class="col-md-6">
                                 <label class="form-label">Category</label>
                                 {{ form.category }}
-                            </div>
+                            </div> -->
                             <div class="col-md-6">
                                 <label class="form-label">Thumbnail Image</label>
                                 {{ form.thumbnail }}
@@ -80,7 +80,7 @@
                         
                         <!-- Buttons -->
                         <div class="d-flex justify-content-between">
-                            <a href="{% url 'platform_admin_dashboard' %}" 
+                            <a href="{% url 'courses:platform_admin_dashboard' %}" 
                                class="btn btn-outline-secondary">Cancel</a>
                             
                             <div>

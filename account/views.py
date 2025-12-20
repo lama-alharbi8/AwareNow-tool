@@ -75,7 +75,7 @@ def platform_login(request):
 
             # Platform Admin
             if user.is_superuser:
-                return redirect("account:platform-dashboard")
+                return redirect("courses:platform_admin_dashboard")
 
             # Company Admin
             if user.role == "COMPANY_ADMIN":

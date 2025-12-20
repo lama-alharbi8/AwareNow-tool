@@ -15,11 +15,13 @@ from courses.forms import CourseForm
 def platform_admin_required(view_func):
     def wrapper(request, *args, **kwargs):
         if not request.user.is_authenticated:
-            return redirect('admin:login')
+            return redirect('account:platform-login')
         
-        if not (request.user.is_platform_admin or request.user.is_superuser):
-            return HttpResponseForbidden("Access denied. Platform admin privileges required.")
-        
+        # if not (request.user.is_platform_admin or request.user.is_superuser):
+        #     return HttpResponseForbidden("Access denied. Platform admin privileges required.")
+        if not request.user.is_superuser:
+            return HttpResponseForbidden("Platform admin only.")
+
         return view_func(request, *args, **kwargs)
     return wrapper
 
@@ -53,11 +55,17 @@ def platform_admin_dashboard(request):
     company_summary = []
     
     for company in companies:
-        employees_count = EmployeeProfile.objects.filter(company=company).count()
+        # employees_count = EmployeeProfile.objects.filter(company=company).count()
+        employees_count = EmployeeProfile.objects.filter( user__company=company).count()
+        # completed_in_company = EmployeeCourseAssignment.objects.filter(
+        #     employee__company=company,
+        #     status='completed'
+        # ).count()
         completed_in_company = EmployeeCourseAssignment.objects.filter(
-            employee__company=company,
+            employee__user__company=company,
             status='completed'
         ).count()
+
         
         company_summary.append({
             'name': company.name,
@@ -69,8 +77,14 @@ def platform_admin_dashboard(request):
     recent_completions = EmployeeCourseAssignment.objects.filter(
         status='completed'
     ).select_related(
+        # 'employee__user',
+        # 'employee__company',
+        # 'course'
+
+        # 'employee__user__company',
+        # 'course'
+        'employee',
         'employee__user',
-        'employee__company',
         'course'
     ).order_by('-completed_at')[:10]
     
@@ -89,8 +103,11 @@ def platform_admin_dashboard(request):
         due_date__lt=timezone.now().date(),  # FIXED HERE
         status__in=['assigned', 'in_progress']
     ).select_related(
+        # 'employee__user',
+        # 'employee__company',
+        # 'course'
+        'employee',
         'employee__user',
-        'employee__company',
         'course'
     )[:5]
     
@@ -100,7 +117,7 @@ def platform_admin_dashboard(request):
         total_attempts=Count('id')
     )
     
-    return render(request, 'courses/platform_admin/dashboard.html', {
+    return render(request, 'courses/dashboard.html', {
         # Basic stats
         'total_courses': total_courses,
         'published_courses': published_courses,
@@ -147,13 +164,13 @@ def create_course(request):
             messages.success(request, f'✅ Course "{course.title}" created!')
             
             if 'save_and_assign' in request.POST:
-                return redirect('assign_course_to_companies', course_id=course.id)
+                return redirect('courses:assign_course_to_companies', course_id=course.id)
             else:
-                return redirect('platform_admin_dashboard')
+                return redirect('courses:platform_admin_dashboard')
     else:
         form = CourseForm()
     
-    return render(request, 'courses/platform_admin/create_course.html', {
+    return render(request, 'courses/create_course.html', {
         'form': form,
         # REMOVED: 'user': request.user,  # Not needed
     })
@@ -166,18 +183,18 @@ def edit_course(request, course_id):
     
     if not (request.user == course.created_by or request.user.is_superuser):
         messages.error(request, 'You can only edit courses you created.')
-        return redirect('platform_admin_dashboard')
+        return redirect('courses:platform_admin_dashboard')
     
     if request.method == 'POST':
         form = CourseForm(request.POST, request.FILES, instance=course)
         if form.is_valid():
             updated_course = form.save()
             messages.success(request, f'✅ Course "{updated_course.title}" updated!')
-            return redirect('platform_admin_dashboard')
+            return redirect('courses:platform_admin_dashboard')
     else:
         form = CourseForm(instance=course)
     
-    return render(request, 'courses/platform_admin/create_course.html', {
+    return render(request, 'courses/create_course.html', {
         'form': form,
         'course': course,
         'is_edit': True,
@@ -216,12 +233,12 @@ def assign_course_to_companies(request, course_id):
         else:
             messages.info(request, 'No new companies assigned.')
         
-        return redirect('platform_admin_dashboard')
+        return redirect('courses:platform_admin_dashboard')
     
     all_companies = Company.objects.filter(status='ACTIVE').order_by('name')
     already_assigned = course.companies.values_list('id', flat=True)
     
-    return render(request, 'courses/platform_admin/assign_course.html', {
+    return render(request, 'courses/assign_course.html', {
         'course': course,
         'all_companies': all_companies,
         'already_assigned': list(already_assigned),

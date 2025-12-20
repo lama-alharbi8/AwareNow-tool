@@ -18,7 +18,7 @@ class CourseForm(forms.ModelForm):
                 'rows': 3,
                 'placeholder': 'Enter brief description (max 2048 chars)'
             }),
-            'category': forms.Select(attrs={'class': 'form-control'}),
+            # 'category': forms.Select(attrs={'class': 'form-control'}),
             'thumbnail': forms.ClearableFileInput(attrs={'class': 'form-control'}),
             'video_url': forms.URLInput(attrs={
                 'class': 'form-control',

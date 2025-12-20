@@ -30,20 +30,23 @@
         >
       </a>
 
-      <!-- Home (Desktop only – حسب الدور) -->
+      <!-- Home (Desktop only  -->
+      {# ===== Home (Desktop only) ===== #}
+
       {% if user.is_authenticated and user.is_superuser %}
-        <a class="nav-link fw-normal d-none d-lg-block
-          {% if request.resolver_match.url_name == 'platform-dashboard' %}active-nav{% endif %}"
-          href="{% url 'account:platform-dashboard' %}">
-          Home
-        </a>
-      {% elif user.is_authenticated and user.role == "COMPANY_ADMIN" %}
-        <a class="nav-link fw-normal d-none d-lg-block
-          {% if request.resolver_match.url_name == 'company-dashboard' %}active-nav{% endif %}"
-          href="{% url 'account:company-dashboard' %}">
-          Home
+        <a class="nav-link fw-normal d-none d-lg-block {% if request.resolver_match.app_name == 'courses' and request.resolver_match.url_name == 'platform_admin_dashboard' %}active-nav{% endif %}"
+            href="{% url 'courses:platform_admin_dashboard' %}">
+            Home
         </a>
       {% endif %}
+
+      {% if user.is_authenticated and user.role == "COMPANY_ADMIN" %}
+        <a class="nav-link fw-normal d-none d-lg-block {% if request.resolver_match.app_name == 'account' and request.resolver_match.url_name == 'company-dashboard' %}active-nav{% endif %}"
+            href="{% url 'account:company-dashboard' %}">
+            Home
+        </a>
+      {% endif %}
+
     </div>
 
     <!-- Mobile toggle -->
@@ -54,12 +57,12 @@
     <!-- ================= Right ================= -->
     <div class="collapse navbar-collapse justify-content-end" id="mainNavbar">
 
-      <!-- ===== Mobile Home (حسب الدور) ===== -->
+      <!-- ===== Mobile Home ===== -->
       <ul class="navbar-nav d-lg-none align-items-center">
         {% if user.is_authenticated and user.is_superuser %}
           <li class="nav-item">
             <a class="nav-link fw-medium text-center"
-               href="{% url 'account:platform-dashboard' %}">
+               href="{% url 'courses:platform_admin_dashboard' %}">
               Home
             </a>
           </li>
@@ -78,15 +81,24 @@
       <ul class="navbar-nav align-items-center gap-3">
 
         <li class="nav-item">
-          <a class="nav-link nav-secondary" href="#">User</a>
+          <a class="nav-link nav-secondary {% if request.resolver_match.app_name == 'account' and request.resolver_match.url_name == 'platform-dashboard' %}active-nav{% endif %}"
+              href="{% url 'account:platform-dashboard' %}">
+              Companies
+          </a>
         </li>
 
         <li class="nav-item">
-          <a class="nav-link nav-secondary" href="#">Course</a>
+          <a class="nav-link nav-secondary {% if request.resolver_match.app_name == 'courses' and request.resolver_match.url_name != 'platform_admin_dashboard' %}active-nav{% endif %}"
+              href="{% url 'courses:create_course' %}">
+              Course
+          </a>
         </li>
 
         <li class="nav-item">
-          <a class="nav-link nav-secondary" href="#">Template</a>
+          <a class="nav-link nav-secondary {% if request.resolver_match.app_name == 'templates_app' %}active-nav{% endif %}"
+              href="#">
+              Template
+          </a>
         </li>
 
         <li class="nav-item divider d-none d-lg-block"></li>
