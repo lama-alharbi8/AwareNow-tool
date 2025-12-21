@@ -1,0 +1,101 @@
+/* ====== Global color ======= */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+
+:root{
+  --brand: #7b1020;
+  --brand-dark: #5c0c17;
+  --brand-soft: rgba(123, 16, 32, 0.10);
+  --bg: #f6f7fb;
+  --text: #111827;
+  --border: #e5e7eb;
+  --shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+body{
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* ===================== platform Navbar ================== */
+
+.navbar {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+  
+.navbar-brand {
+    font-size: 1.2rem;
+    padding: 0;
+}
+  
+.nav-link {
+    padding: 0.25rem 0;
+}
+  
+.divider {
+    width: 1px;
+    height: 18px;
+    background: var(--border);
+    margin: 0 6px;
+}
+
+.nav-secondary,
+.active-nav {
+  position: relative;
+}
+
+.nav-secondary {
+  color: black;
+  font-weight: 400;
+}
+
+.nav-secondary:hover {
+  color: var(--text);
+}
+
+.active-nav {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.nav-secondary::after,
+.active-nav::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -16px;
+  height: 3px;
+  background: var(--brand);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.nav-secondary:hover::after {
+  opacity: 1;
+}
+
+.active-nav::after {
+  opacity: 1;
+}
+
+.nav-logout {
+    color: var(--brand);
+}
+
+.navbar-logo {
+    height: 25px;      
+    width: auto;       
+    display: block;    
+}
+
+/* Disable hover underline on mobile */
+@media (max-width: 991px) {
+  .nav-secondary:hover::after {
+    opacity: 0 !important;
+  }
+}
+
+
+  

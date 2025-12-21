@@ -1,14 +1,143 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Platform Dashboard</title>
-</head>
-<body>
-    <h1>Platform Admin Dashboard</h1>
+{% extends "core/base.html" %}
 
-    <p>Welcome {{ request.user.username }}</p>
+{% block title %}Platform Dashboard{% endblock %}
 
-    <a href="{% url 'account:create-company' %}">Create Company</a>
+{% block content %}
+<div class="container">
 
-</body>
-</html>
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-0">Platform Dashboard</h3>
+            <small class="text-muted">
+                Manage contracts and companies
+            </small>
+        </div>
+
+        <a href="{% url 'account:create-company' %}" class="btn btn-dark">
+            + Create Company
+        </a>
+    </div>
+
+    <!-- Contracts Section -->
+    <div class="mb-5">
+        <h5 class="fw-semibold mb-3">Contracts</h5>
+
+        <div class="row">
+            {% for plan in plans %}
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm p-3 h-100">
+                    <h6 class="fw-bold">{{ plan.name }}</h6>
+
+                    <p class="text-muted mb-1">
+                        Max Users: {{ plan.max_users }}
+                    </p>
+
+                    <p class="text-muted mb-2">
+                        Price: {{ plan.price }} SAR
+                    </p>
+
+                    {% if plan.has_platform_support %}
+                        <span class="badge bg-success">
+                            Platform Support Included
+                        </span>
+                    {% else %}
+                        <span class="badge bg-secondary">
+                            No Platform Support
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+
+
+    <!-- Companies Section -->
+    <div>
+        <!-- Companies Header + Filters -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+
+            <!-- Title -->
+            <h5 class="fw-semibold mb-0">Companies</h5>
+
+            <!-- Filters -->
+            <form method="get" class="d-flex gap-2">
+                <!-- Status Filter -->
+                <select name="status" class="form-select form-select-sm">
+                    <option value="">All Status</option>
+                    <option value="ACTIVE" {% if request.GET.status == "ACTIVE" %}selected{% endif %}>
+                        Active
+                    </option>
+                    <option value="EXPIRED" {% if request.GET.status == "EXPIRED" %}selected{% endif %}>
+                        Expired
+                    </option>
+                </select>
+
+                <!-- Contract Filter -->
+                <select name="plan" class="form-select form-select-sm">
+                    <option value="">All Contracts</option>
+                    {% for plan in plans %}
+                        <option value="{{ plan.id }}"
+                            {% if request.GET.plan == plan.id|stringformat:"s" %}selected{% endif %}>
+                            {{ plan.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                <!-- Submit -->
+                <button type="submit" class="btn btn-sm btn-outline-dark">
+                    Filter
+                </button>
+            </form>
+
+        </div>
+
+
+        <div class="card border-0 shadow-sm">
+            <table class="table mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Company Name</th>
+                        <th>Domain</th>
+                        <th>Plan</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for company in companies %}
+                    <tr>
+                        <td>{{ company.name }}</td>
+                        <td>{{ company.email_domain }}</td>
+                        <td>{{ company.subscription_plan.name }}</td>
+                        <td>{{ company.license_start_date|date:"Y-m-d" }}</td>
+                        <td>{{ company.license_end_date|date:"Y-m-d" }}</td>
+                        <td>
+                            {% if company.license_status == "ACTIVE" %}
+                                <span class="badge bg-success">Active</span>
+                            {% elif company.license_status == "EXPIRED" %}
+                                <span class="badge bg-danger">Expired</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactive</span>
+                            {% endif %}
+                        </td>
+                        
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center text-muted">
+                            No companies found
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+    </div>
+
+</div>
+{% endblock %}

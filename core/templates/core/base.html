@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>{% block title %}AwareNow{% endblock %}</title>
+
+  {% load static %}
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Global CSS -->
+  <link rel="stylesheet" href="{% static 'core/css/global.css' %}">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg bg-white border-bottom sticky-top">
+  <div class="container-fluid px-4">
+
+    <!-- ================= Left ================= -->
+    <div class="d-flex align-items-center gap-4">
+
+      <!-- Logo -->
+      <a class="navbar-brand d-flex align-items-center" href="#">
+        <img
+          src="{% static 'img/logo-white.png' %}"
+          alt="AwareNow"
+          class="navbar-logo"
+        >
+      </a>
+
+      <!-- Home (Desktop only  -->
+      {# ===== Home (Desktop only) ===== #}
+
+      {% if user.is_authenticated and user.is_superuser %}
+        <a class="nav-link fw-normal d-none d-lg-block {% if request.resolver_match.app_name == 'courses' and request.resolver_match.url_name == 'platform_admin_dashboard' %}active-nav{% endif %}"
+            href="{% url 'courses:platform_admin_dashboard' %}">
+            Home
+        </a>
+      {% endif %}
+
+      {% if user.is_authenticated and user.role == "COMPANY_ADMIN" %}
+        <a class="nav-link fw-normal d-none d-lg-block {% if request.resolver_match.app_name == 'account' and request.resolver_match.url_name == 'company-dashboard' %}active-nav{% endif %}"
+            href="{% url 'account:company-dashboard' %}">
+            Home
+        </a>
+      {% endif %}
+
+    </div>
+
+    <!-- Mobile toggle -->
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <!-- ================= Right ================= -->
+    <div class="collapse navbar-collapse justify-content-end" id="mainNavbar">
+
+      <!-- ===== Mobile Home ===== -->
+      <ul class="navbar-nav d-lg-none align-items-center">
+        {% if user.is_authenticated and user.is_superuser %}
+          <li class="nav-item">
+            <a class="nav-link fw-medium text-center"
+               href="{% url 'courses:platform_admin_dashboard' %}">
+              Home
+            </a>
+          </li>
+        {% elif user.is_authenticated and user.role == "COMPANY_ADMIN" %}
+          <li class="nav-item">
+            <a class="nav-link fw-medium text-center"
+               href="{% url 'account:company-dashboard' %}">
+              Home
+            </a>
+          </li>
+        {% endif %}
+      </ul>
+
+      <!-- ================= Platform Admin ================= -->
+      {% if user.is_authenticated and user.is_superuser %}
+      <ul class="navbar-nav align-items-center gap-3">
+
+        <li class="nav-item">
+          <a class="nav-link nav-secondary {% if request.resolver_match.app_name == 'account' and request.resolver_match.url_name == 'platform-dashboard' %}active-nav{% endif %}"
+              href="{% url 'account:platform-dashboard' %}">
+              Companies
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link nav-secondary {% if request.resolver_match.app_name == 'courses' and request.resolver_match.url_name != 'platform_admin_dashboard' %}active-nav{% endif %}"
+              href="{% url 'courses:create_course' %}">
+              Course
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link nav-secondary {% if request.resolver_match.app_name == 'templates_app' %}active-nav{% endif %}"
+              href="#">
+              Template
+          </a>
+        </li>
+
+        <li class="nav-item divider d-none d-lg-block"></li>
+
+        <li class="nav-item">
+          <a class="nav-logout nav-link fw-normal"
+             href="{% url 'account:logout' %}">
+            logout
+          </a>
+        </li>
+
+      </ul>
+      {% endif %}
+
+      <!-- ================= Company Admin ================= -->
+      {% if user.is_authenticated and user.role == "COMPANY_ADMIN" %}
+
+      <!-- Desktop menu -->
+      <ul class="navbar-nav align-items-center gap-3 d-none d-lg-flex">
+
+        <li class="nav-item">
+          <a class="nav-link nav-secondary" href="#">Users</a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link nav-secondary" href="#">Library</a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link nav-secondary" href="#">Policies</a>
+        </li>
+
+        <!-- Campaigns Dropdown (Desktop only) -->
+        <li class="nav-item dropdown">
+          <a class="nav-link nav-secondary dropdown-toggle"
+             href="#"
+             role="button"
+             data-bs-toggle="dropdown">
+            Campaigns
+          </a>
+
+          <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+            <li><a class="dropdown-item" href="#">Phishing Awareness</a></li>
+            <li><a class="dropdown-item" href="#">Security Awareness</a></li>
+          </ul>
+        </li>
+
+        <li class="nav-item divider"></li>
+
+        <li class="nav-item">
+          <a class="nav-logout nav-link fw-normal"
+             href="{% url 'account:logout' %}">
+            logout
+          </a>
+        </li>
+
+      </ul>
+
+      <!-- Mobile menu (Company Admin) -->
+      <ul class="navbar-nav d-lg-none align-items-center">
+
+        <!-- Users -->
+        <li class="nav-item">
+          <a class="nav-link nav-secondary text-center" href="#">
+            Users
+          </a>
+        </li>
+
+        <!-- Library -->
+        <li class="nav-item">
+          <a class="nav-link nav-secondary text-center" href="#">
+            Library
+          </a>
+        </li>
+
+        <!-- Policies -->
+        <li class="nav-item">
+          <a class="nav-link nav-secondary text-center" href="#">
+            Policies
+          </a>
+        </li>
+
+        <!-- Campaigns items (بدون Dropdown) -->
+        <li class="nav-item">
+          <a class="nav-link nav-secondary text-center" href="#">
+            Phishing Awareness
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link nav-secondary text-center" href="#">
+            Security Awareness
+          </a>
+        </li>
+
+        <!-- Logout -->
+        <li class="nav-item mt-2">
+          <a class="nav-logout nav-link fw-normal text-center"
+            href="{% url 'account:logout' %}">
+            logout
+          </a>
+        </li>
+
+      </ul>
+
+
+      {% endif %}
+    </div>
+  </div>
+</nav>
+
+<!-- Page wrapper -->
+<main class="container-fluid px-3 px-md-4 py-4">
+  {% block content %}{% endblock %}
+</main>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

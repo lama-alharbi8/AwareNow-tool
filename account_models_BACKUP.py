@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django.utils import timezone
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 # ==== Contract Model => 3 contract saved in DB ====
 class SubscriptionPlan(models.Model):
@@ -31,32 +31,13 @@ class Company(models.Model):
         choices=(
             ('ACTIVE', 'Active'),
             ('EXPIRED', 'Expired'),
+            ('SUSPENDED', 'Suspended'),
         ),
         default='ACTIVE'
     )
 
     def __str__(self):
         return self.name
-    
-    @property
-    def license_status(self):
-        today = timezone.now().date()
-
-        if today <= self.license_end_date:
-            return "ACTIVE"
-        return "EXPIRED"
-
-# ====== User Group ======
-class CompanyGroup(models.Model):
-    company = models.ForeignKey(Company, on_delete=models.CASCADE, related_name="company_groups")
-    name = models.CharField(max_length=100)
-    is_system = models.BooleanField(default=False)  # عشان Staff
-
-    class Meta:
-        unique_together = ("company", "name")
-
-    def __str__(self):
-        return f"{self.company.name} - {self.name}"
 
 # ==== User Model ====
 class User(AbstractUser):
@@ -86,21 +67,8 @@ class User(AbstractUser):
         null=True,
         blank=True
     )
-    
-    is_disabled = models.BooleanField(default=False)
 
-    original_email = models.EmailField(
-        null=True,
-        blank=True,
-        help_text="Stores original email when user is soft-deleted"
-    )
-    # ===== connect user with group =====
-    company_groups = models.ManyToManyField(
-    CompanyGroup,
-    blank=True,
-    related_name="users"
-    )
-
+     # Quick access properties
     @property
     def is_platform_admin(self):
         return self.role == 'PLATFORM_ADMIN'
@@ -112,10 +80,14 @@ class User(AbstractUser):
     @property
     def is_employee(self):
         return self.role == 'EMPLOYEE'
+    
+    def __str__(self):
+        role_display = dict(self.ROLE_CHOICES).get(self.role, self.role)
+        return f"{self.get_full_name()} ({role_display})"
 
-# Add this AFTER the User class (at the end of the file):
-from django.core.validators import MinValueValidator, MaxValueValidator
 
+
+# ==== Employee Profile Model (Simplified) ====
 class EmployeeProfile(models.Model):
     """
     Extended profile for employees with training metrics.

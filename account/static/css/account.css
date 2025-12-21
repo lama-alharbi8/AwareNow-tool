@@ -1,0 +1,19 @@
+/* ===== Login Page ===== */
+.btn-login {
+    background-color: var(--brand);
+    color: #fff;
+    border-radius: 12px;
+}
+  
+.btn-login:hover {
+    background-color: var(--brand-dark);
+    color: #fff;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 420px;
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+}
+  

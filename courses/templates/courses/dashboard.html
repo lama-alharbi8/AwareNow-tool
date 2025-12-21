@@ -1,0 +1,310 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}Platform Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card stat-card border-primary">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">TOTAL COURSES</h6>
+                    <h2 class="text-primary">{{ total_courses }}</h2>
+                    <small class="text-muted">{{ published_courses }} published</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card stat-card border-success">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">COMPLETION RATE</h6>
+                    <h2 class="text-success">{{ completion_rate }}%</h2>
+                    <small class="text-muted">{{ completed_count }} completed</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card stat-card border-warning">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">ACTIVE COMPANIES</h6>
+                    <h2 class="text-warning">{{ total_companies }}</h2>
+                    <small class="text-muted">Using platform</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card stat-card border-info">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">AVG QUIZ SCORE</h6>
+                    <h2 class="text-info">{{ avg_quiz_score }}%</h2>
+                    <small class="text-muted">{{ total_quiz_attempts }} attempts</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Course Status Overview -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Course Assignment Status</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3">
+                            <div class="p-3">
+                                <h3 class="text-secondary">{{ assigned_count }}</h3>
+                                <span class="badge bg-secondary">Assigned</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3">
+                                <h3 class="text-warning">{{ in_progress_count }}</h3>
+                                <span class="badge bg-warning">In Progress</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3">
+                                <h3 class="text-success">{{ completed_count }}</h3>
+                                <span class="badge bg-success">Completed</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="p-3">
+                                <h3 class="text-danger">{{ overdue_count }}</h3>
+                                <span class="badge bg-danger">Overdue</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <a href="{% url 'courses:create_course' %}" class="btn btn-primary btn-lg w-100 mb-3">
+                        Create New Course
+                    </a>
+                    <a href="/admin/courses/course/" class="btn btn-outline-primary w-100 mb-2">
+                        Manage All Courses
+                    </a>
+                    <a href="/admin/courses/coursecategory/" class="btn btn-outline-secondary w-100">
+                        Course Categories
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="row">
+        <!-- Recent Completions -->
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">
+                        Recent Completions
+                        <span class="badge bg-light text-success float-end">{{ recent_completions|length }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_completions %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Employee</th>
+                                    <th>Company</th>
+                                    <th>Course</th>
+                                    <th>Completed</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for comp in recent_completions %}
+                                <tr>
+                                    <td>
+                                        <small>{{ comp.employee_email|truncatechars:15 }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ comp.company|truncatechars:12 }}</span>
+                                    </td>
+                                    <td>{{ comp.course|truncatechars:20 }}</td>
+                                    <td>
+                                        <small class="text-muted">{{ comp.completed_date }}</small>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-3">
+                        <p class="text-muted">No recent completions</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Overdue Alerts -->
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        Overdue Assignments
+                        <span class="badge bg-light text-danger float-end">{{ overdue_count }}</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if overdue_list %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Employee</th>
+                                    <th>Course</th>
+                                    <th>Status</th>
+                                    <th>Due</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for assignment in overdue_list %}
+                                <tr class="table-danger">
+                                    <td>
+                                        <small>{{ assignment.employee.user.email|truncatechars:15 }}</small>
+                                    </td>
+                                    <td>{{ assignment.course.title|truncatechars:20 }}</td>
+                                    <td>
+                                        <span class="badge bg-warning">
+                                            {{ assignment.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <small class="text-danger">{{ assignment.due_date|date:"M d" }}</small>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-3">
+                        <p class="text-success">No overdue assignments</p>
+                        <small class="text-muted">Great job!</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Company Summary -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">Company Overview</h5>
+                </div>
+                <div class="card-body">
+                    {% if company_summary %}
+                    <div class="row">
+                        {% for company in company_summary %}
+                        <div class="col-md-3 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ company.name|truncatechars:20 }}</h6>
+                                    <div class="d-flex justify-content-between">
+                                        <div>
+                                            <small class="text-muted">Employees</small>
+                                            <h5>{{ company.employee_count }}</h5>
+                                        </div>
+                                        <div class="text-end">
+                                            <small class="text-muted">Completed</small>
+                                            <h5>{{ company.completed_courses }}</h5>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center py-3">No company data available</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Your Recent Courses -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Your Recent Courses</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_courses %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for course in recent_courses %}
+                                <tr>
+                                    <td>{{ course.title|truncatechars:30 }}</td>
+                                    <td>
+                                        {% if course.is_published %}
+                                        <span class="badge bg-success">Published</span>
+                                        {% else %}
+                                        <span class="badge bg-warning">Draft</span>
+                                        {% endif %}
+                                    </td>
+                                    <td><small>{{ course.created_at|date:"M d, Y" }}</small></td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{% url 'courses:edit_course' course.id %}" 
+                                               class="btn btn-outline-primary">
+                                                Edit
+                                            </a>
+                                            <a href="{% url 'courses:assign_course_to_companies' course.id %}" 
+                                               class="btn btn-outline-secondary">
+                                                Assign
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <p class="text-muted">You haven't created any courses yet</p>
+                        <a href="{% url 'courses:create_course' %}" class="btn btn-primary">
+                            Create Your First Course
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
