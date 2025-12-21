@@ -1,6 +1,9 @@
 from django import forms
 from .models  import Company, SubscriptionPlan, User, CompanyGroup
 
+# =========================
+# Company
+# =========================
 class CompanyForm(forms.ModelForm):
     class Meta:
         model = Company
@@ -38,7 +41,9 @@ class CompanyForm(forms.ModelForm):
         return domain
 
 
-
+# =========================
+# Platform creates Company Admin
+# =========================
 class SuperAdminForm(forms.ModelForm):
     class Meta:
         model = User
@@ -52,7 +57,9 @@ class SuperAdminForm(forms.ModelForm):
         return email.strip().lower()
 
 
-
+# =========================
+# Company dash -> Create Users 
+# =========================
 COMPANY_USER_ROLE_CHOICES = (
     ("COMPANY_ADMIN", "Company Admin"),
     ("EMPLOYEE", "Employee"),
@@ -99,3 +106,79 @@ class CompanyUserCreateForm(forms.ModelForm):
             )
 
         return email
+
+# =========================
+# Group Creation (NAME ONLY)
+# =========================
+# class CompanyGroupCreateForm(forms.ModelForm):
+#     class Meta:
+#         model = CompanyGroup
+#         fields = ["name"]
+
+#     def __init__(self, *args, company=None, **kwargs):
+#         super().__init__(*args, **kwargs)
+#         self.company = company
+
+#     def clean_name(self):
+#         name = self.cleaned_data["name"].strip()
+
+#         if CompanyGroup.objects.filter(
+#             company=self.company,
+#             name__iexact=name
+#         ).exists():
+#             raise forms.ValidationError(
+#                 "Group with this name already exists."
+#             )
+
+#         return name
+class CompanyGroupCreateForm(forms.ModelForm):
+    users = forms.ModelMultipleChoiceField(
+        queryset=User.objects.none(),
+        required=False,
+        widget=forms.CheckboxSelectMultiple
+    )
+
+    class Meta:
+        model = CompanyGroup
+        fields = ["name"]  # ❌ بدون description
+
+    def __init__(self, *args, company=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.company = company
+
+        if company:
+            self.fields["users"].queryset = User.objects.filter(
+                company=company,
+                is_disabled=False
+            )
+
+    def clean_name(self):
+        name = self.cleaned_data["name"].strip()
+
+        if CompanyGroup.objects.filter(
+            company=self.company,
+            name__iexact=name
+        ).exists():
+            raise forms.ValidationError(
+                "Group with this name already exists."
+            )
+
+        return name
+
+# =========================
+# Add Users To Existing Group
+# =========================
+class AddUsersToGroupForm(forms.Form):
+    users = forms.ModelMultipleChoiceField(
+        queryset=User.objects.none(),
+        widget=forms.CheckboxSelectMultiple
+    )
+
+    def __init__(self, *args, company=None, group=None, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if company and group:
+            self.fields["users"].queryset = User.objects.filter(
+                company=company,
+                is_disabled=False
+            ).exclude(company_groups=group)

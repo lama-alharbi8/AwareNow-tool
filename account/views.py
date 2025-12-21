@@ -1,9 +1,9 @@
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, redirect
-from .forms import CompanyForm, SuperAdminForm
+from .forms import CompanyForm, SuperAdminForm, CompanyGroupCreateForm
 from django.contrib.auth.decorators import login_required
 import uuid
-from .models import Company, User
+from .models import Company, User, CompanyGroup
 from .services import send_activation_email
 from django.shortcuts import get_object_or_404
 # from django.contrib.auth import logout
@@ -261,3 +261,133 @@ def toggle_user_active(request, user_id):
         user.save()
 
     return redirect("account:company-users")
+
+
+
+@login_required
+def company_groups(request):
+    if request.user.role != "COMPANY_ADMIN":
+        return redirect("account:platform-login")
+
+    company = request.user.company
+    groups = CompanyGroup.objects.filter(company=company)
+
+    if request.method == "POST":
+        form = CompanyGroupCreateForm(request.POST, company=company)
+        if form.is_valid():
+            group = form.save(commit=False)
+            group.company = company
+            group.save()
+
+            for user in form.cleaned_data["users"]:
+                group.users.add(user)
+
+            messages.success(request, "Group created successfully.")
+            return redirect("account:company-groups")
+    else:
+        form = CompanyGroupCreateForm(company=company)
+
+    return render(request, "account/company_groups.html", {
+        "groups": groups,
+        "form": form,
+    })
+
+
+@login_required
+def group_detail(request, group_id):
+    if request.user.role != "COMPANY_ADMIN":
+        return redirect("account:platform-login")
+
+    group = get_object_or_404(
+        CompanyGroup,
+        id=group_id,
+        company=request.user.company
+    )
+
+    users = group.users.filter(is_disabled=False)
+
+    add_form = AddUsersToGroupForm(
+        company=request.user.company,
+        group=group
+    )
+
+    return render(request, "account/group_detail.html", {
+        "group": group,
+        "users": users,
+        "add_form": add_form
+    })
+
+
+@login_required
+def add_users_to_group(request, group_id):
+    if request.user.role != "COMPANY_ADMIN":
+        return redirect("account:platform-login")
+
+    group = get_object_or_404(
+        CompanyGroup,
+        id=group_id,
+        company=request.user.company
+    )
+
+    form = AddUsersToGroupForm(
+        request.POST,
+        company=request.user.company,
+        group=group
+    )
+
+    if form.is_valid():
+        for user in form.cleaned_data["users"]:
+            group.users.add(user)
+
+        messages.success(request, "Users added to group.")
+
+    return redirect("account:group-detail", group_id=group.id)
+
+
+@login_required
+def remove_user_from_group(request, group_id, user_id):
+    if request.user.role != "COMPANY_ADMIN":
+        return redirect("account:platform-login")
+
+    group = get_object_or_404(
+        CompanyGroup,
+        id=group_id,
+        company=request.user.company
+    )
+
+    if group.is_system:
+        messages.error(request, "You cannot modify this group.")
+        return redirect("account:group-detail", group_id=group.id)
+
+    user = get_object_or_404(
+        User,
+        id=user_id,
+        company=request.user.company
+    )
+
+    group.users.remove(user)
+    messages.success(request, "User removed from group.")
+
+    return redirect("account:group-detail", group_id=group.id)
+
+
+
+@login_required
+def delete_group(request, group_id):
+    if request.user.role != "COMPANY_ADMIN":
+        return redirect("account:platform-login")
+
+    group = get_object_or_404(
+        CompanyGroup,
+        id=group_id,
+        company=request.user.company
+    )
+
+    if group.is_system:
+        messages.error(request, "System groups cannot be deleted.")
+        return redirect("account:company-groups")
+
+    group.delete()
+    messages.success(request, "Group deleted.")
+
+    return redirect("account:company-groups")
