@@ -35,6 +35,18 @@ urlpatterns = [
         name="remove-user-from-group"
     ),
 
+    path(
+    "company/groups/<int:group_id>/",
+    views.group_detail,
+    name="group-detail"
+    ),
+
+    path(
+    "company/groups/<int:group_id>/remove-user/<int:user_id>/",
+    views.remove_user_from_group,
+    name="remove-user-from-group"
+    ),
+
 
 
 ]

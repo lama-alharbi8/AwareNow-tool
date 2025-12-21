@@ -1,6 +1,10 @@
 {% extends "core/base.html" %}
-
+{% load static %}
 {% block title %}Company Groups{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/company_users.css' %}">
+{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -20,6 +24,22 @@
             + Create Group
         </button>
     </div>
+
+    <!-- ========= Tab -> user group ======= -->
+    <ul class="nav nav-pills users-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'company-users' %}active{% endif %}"
+               href="{% url 'account:company-users' %}">
+                Users
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'company-groups' %}active{% endif %}"
+               href="{% url 'account:company-groups' %}">
+                Groups
+            </a>
+        </li>
+    </ul>
 
     <!-- Create Group (Collapse) -->
     <div id="createGroupForm" class="collapse mb-4">

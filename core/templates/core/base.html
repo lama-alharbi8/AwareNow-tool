@@ -121,7 +121,10 @@
       <ul class="navbar-nav align-items-center gap-3 d-none d-lg-flex">
 
         <li class="nav-item">
-          <a class="nav-link nav-secondary" href="#">Users</a>
+          <a class="nav-link nav-secondary {% if request.resolver_match.url_name in 'company-users company-groups' %}active-nav{% endif %}"
+              href="{% url 'account:company-users' %}">
+              Users
+          </a>
         </li>
 
         <li class="nav-item">

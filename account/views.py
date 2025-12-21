@@ -1,12 +1,11 @@
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import render, redirect
-from .forms import CompanyForm, SuperAdminForm, CompanyGroupCreateForm
+from .forms import CompanyForm, SuperAdminForm, CompanyGroupCreateForm, AddUsersToGroupForm
 from django.contrib.auth.decorators import login_required
 import uuid
 from .models import Company, User, CompanyGroup
 from .services import send_activation_email
 from django.shortcuts import get_object_or_404
-# from django.contrib.auth import logout
 from .models import SubscriptionPlan
 from django.utils import timezone
 from django.db import transaction
@@ -270,7 +269,11 @@ def company_groups(request):
         return redirect("account:platform-login")
 
     company = request.user.company
-    groups = CompanyGroup.objects.filter(company=company)
+    # groups = CompanyGroup.objects.filter(company=company)
+    groups = CompanyGroup.objects.filter(
+    company=company,
+    is_system=False
+    )
 
     if request.method == "POST":
         form = CompanyGroupCreateForm(request.POST, company=company)
@@ -391,3 +394,63 @@ def delete_group(request, group_id):
     messages.success(request, "Group deleted.")
 
     return redirect("account:company-groups")
+
+
+@login_required
+def group_detail(request, group_id):
+    if request.user.role != "COMPANY_ADMIN":
+        return redirect("account:platform-login")
+
+    company = request.user.company
+
+    group = get_object_or_404(
+        CompanyGroup,
+        id=group_id,
+        company=company
+    )
+
+    # اليوزرز داخل القروب
+    group_users = group.users.all()
+
+    # فورم إضافة يوزرز
+    add_users_form = AddUsersToGroupForm(
+        request.POST or None,
+        company=company,
+        group=group
+    )
+
+    if request.method == "POST" and add_users_form.is_valid():
+        group.users.add(*add_users_form.cleaned_data["users"])
+        messages.success(request, "Users added to group.")
+        return redirect("account:group-detail", group_id=group.id)
+
+    return render(request, "account/group_detail.html", {
+        "group": group,
+        "group_users": group_users,
+        "add_users_form": add_users_form,
+    })
+
+
+@login_required
+def remove_user_from_group(request, group_id, user_id):
+    if request.user.role != "COMPANY_ADMIN":
+        return redirect("account:platform-login")
+
+    company = request.user.company
+
+    group = get_object_or_404(
+        CompanyGroup,
+        id=group_id,
+        company=company
+    )
+
+    user = get_object_or_404(
+        User,
+        id=user_id,
+        company=company
+    )
+
+    group.users.remove(user)
+
+    messages.success(request, "User removed from group.")
+    return redirect("account:group-detail", group_id=group.id)

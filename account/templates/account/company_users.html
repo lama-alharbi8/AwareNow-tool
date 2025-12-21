@@ -1,6 +1,10 @@
 {% extends "core/base.html" %}
-
+{% load static %}
 {% block title %}Company Users{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/company_users.css' %}">
+{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -28,10 +32,7 @@
                 {% csrf_token %}
 
                 <div class="row g-3">
-                    <!-- <div class="col-md-6">
-                        <label class="form-label">First Name</label>
-                        {{ form.first_name }}
-                    </div> -->
+
                     <div class="col-md-6">
                         <label class="form-label">First Name</label>
                         <input
@@ -43,10 +44,6 @@
                         >
                     </div>
                     
-                    <!-- <div class="col-md-6">
-                        <label class="form-label">Last Name</label>
-                        {{ form.last_name }}
-                    </div> -->
                     <div class="col-md-6">
                         <label class="form-label">Last Name</label>
                         <input
@@ -57,12 +54,6 @@
                             required
                         >
                     </div>
-                    
-
-                    <!-- <div class="col-md-6">
-                        <label class="form-label">Email</label>
-                        {{ form.email }}
-                    </div> -->
 
                     <div class="col-md-6">
                         <label class="form-label">Email</label>
@@ -79,19 +70,14 @@
                             </div>
                         {% endfor %}
                     </div>
-                    
 
-                    <!-- <div class="col-md-6">
-                        <label class="form-label">Role</label>
-                        {{ form.role }}
-                    </div> -->
                     <div class="col-md-6">
                         <label class="form-label">Role</label>
                         <select
                             name="role"
                             class="form-select {% if form.role.errors %}is-invalid{% endif %}"
-                            required
-                        >
+                            required>
+
                             <option value="">---------</option>
                             {% for value, label in form.fields.role.choices %}
                                 <option value="{{ value }}"
@@ -109,11 +95,6 @@
                         {% endfor %}
                     </div>
                     
-
-                    <!-- <div class="col-md-6">
-                        <label class="form-label">Department</label>
-                        {{ form.department }}
-                    </div> -->
                     <div class="col-md-6">
                         <label class="form-label">Department</label>
                         <input
@@ -125,14 +106,6 @@
                         >
                     </div>
                     
-
-                    <!-- <div class="col-md-12">
-                        <label class="form-label">Groups</label>
-                        {{ form.company_groups }}
-                        <small class="text-muted d-block mt-1">
-                            User will always be added to <strong>Staff</strong> group by default
-                        </small>
-                    </div> -->
                     <div class="col-md-12">
                         <label class="form-label">Groups</label>
                     
@@ -147,7 +120,6 @@
                         </small>
                     </div>
                     
-
                 </div>
 
                 <div class="mt-4 d-flex justify-content-end">
@@ -158,6 +130,21 @@
             </form>
         </div>
     </div>
+    <!-- ========= Tab -> user group ======= -->
+    <ul class="nav nav-pills users-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'company-users' %}active{% endif %}"
+               href="{% url 'account:company-users' %}">
+                Users
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'company-groups' %}active{% endif %}"
+               href="{% url 'account:company-groups' %}">
+                Groups
+            </a>
+        </li>
+    </ul>
 
     <form method="get" class="d-flex gap-2 mb-3">
 
@@ -229,14 +216,7 @@
                             {{ user.department|default:"-" }}
                         </td>
 
-                        <td>
-                            <!-- {% for group in user.company_groups.all %}
-                                <span class="badge bg-light text-dark border">
-                                    {{ group.name }}
-                                </span>
-                            {% empty %}
-                                <span class="text-muted">-</span>
-                            {% endfor %} -->
+                        <td>                          
                             {% for group in user.company_groups.all %}
                                 {% if not group.is_system %}
                                     <span class="badge bg-light text-dark border">
@@ -248,15 +228,6 @@
                             {% endfor %}
 
                         </td>
-
-                        <!-- <td>
-                            {% if user.is_active %}
-                                <span class="badge bg-success">Active</span>
-                            {% else %}
-                                <span class="badge bg-secondary">Pending</span>
-                            {% endif %}
-                        </td> -->
-
                         <td>
                             {% if user.is_disabled %}
                                 <span class="badge bg-danger">Disabled</span>
@@ -276,42 +247,7 @@
                             {% else %}
                                 <span class="text-muted small">-</span>
                             {% endif %}
-                        </td>
-                        
-                        
-                        <!-- <td class="text-end">
-                            {% if user.is_active and user != request.user %}
-                                <a href="{% url 'account:toggle-user-active' user.id %}"
-                                   class="btn btn-sm btn-outline-danger">
-                                    Disable
-                                </a>
-                            {% else %}
-                                <span class="text-muted small">-</span>
-                            {% endif %}
-                        </td> -->
-
-                        
-                        <!-- <td class="text-end">
-                            {% if user != request.user and user.is_active %}
-                                <a href="{% url 'account:toggle-user-active' user.id %}"
-                                   class="btn btn-sm btn-outline-danger">
-                                    Disable
-                                </a>
-                            {% else %}
-                                <span class="text-muted small">-</span>
-                            {% endif %}
-                        </td> -->
-                        
-                        <!-- <td class="text-end">
-                            {% if user != request.user %}
-                                <a href="{% url 'account:toggle-user-active' user.id %}"
-                                class="btn btn-sm {% if user.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %}">
-                                    {% if user.is_active %}Disable{% else %}Enable{% endif %}
-                                </a>
-                            {% else %}
-                                <span class="text-muted small">You</span>
-                            {% endif %}
-                        </td> -->
+                        </td>                                    
                     </tr>
                     {% empty %}
                     <tr>
