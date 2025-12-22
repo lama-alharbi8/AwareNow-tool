@@ -1,0 +1,68 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/phishing.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="ph-wrap">
+  <div class="ph-header">
+    <div class="ph-title">
+      <span class="ph-bar"></span>
+      <h1>Phishing Page</h1>
+    </div>
+
+    <form class="ph-search" method="get">
+      <input name="q" value="{{ q }}" type="text" placeholder="Search..." class="form-control">
+      <button class="btn btn-dark" type="submit">Search</button>
+      <a class="btn btn-outline-dark" href="{% url 'campaigns:phishing-create' %}">+ Create Phishing</a>
+    </form>
+  </div>
+
+  <!-- Active -->
+  <div class="ph-section">
+    <div class="ph-section-label">
+      <span class="badge rounded-pill text-bg-dark">Active</span>
+    </div>
+
+    {% if active_campaign %}
+      <div class="ph-active-card">
+        <h3 class="mb-2">{{ active_campaign.title }}</h3>
+        <p class="text-muted mb-0">
+          Group: {{ active_campaign.user_group|default:"-" }} · Sender: {{ active_campaign.sender|default:"-" }} ·
+          Date: {{ active_campaign.scheduled_date|default:"-" }}
+        </p>
+      </div>
+    {% else %}
+      <div class="ph-empty">No active campaigns yet.</div>
+    {% endif %}
+  </div>
+
+  <!-- Completed -->
+  <div class="ph-section mt-4">
+    <div class="ph-section-label d-flex align-items-center justify-content-between">
+      <span class="badge rounded-pill text-bg-light border">Completed</span>
+      <div class="ph-pagination-hint">‹ 1 2 3 ›</div>
+    </div>
+
+    <div class="ph-grid">
+      {% for c in completed_campaigns %}
+        <div class="ph-card">
+          <h4 class="ph-card-title">{{ c.title }}</h4>
+          <p class="ph-card-text">
+            {{ c.user_group|default:"No group" }}<br>
+            {{ c.sender|default:"No sender" }}
+          </p>
+          <div class="ph-card-footer">
+            <span class="text-muted small">{{ c.scheduled_date|default:"-" }}</span>
+            <button class="btn btn-sm btn-outline-secondary" type="button">Download</button>
+          </div>
+        </div>
+      {% empty %}
+        <div class="ph-empty">No completed campaigns.</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

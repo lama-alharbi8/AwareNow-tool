@@ -1,3 +1,5 @@
 from django.contrib import admin
+from .models import EmailTemplate, PhishingCampaign
 
-# Register your models here.
+admin.site.register(EmailTemplate)
+admin.site.register(PhishingCampaign)
