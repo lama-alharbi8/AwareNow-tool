@@ -237,6 +237,8 @@ class EmployeeCourseProgress(models.Model):
     def __str__(self):
         return f"Progress: {self.assignment.employee.user.email} - {self.assignment.course.title}"
     
+    
+    
 class Quiz(models.Model):
     """
     Quiz associated with a course
@@ -306,7 +308,7 @@ class QuizQuestion(models.Model):
             options.append(('C', self.option_c))
         if self.option_d:
             options.append(('D', self.option_d))
-            
+
         return options
     
     class Meta:
