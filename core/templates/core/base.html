@@ -90,7 +90,14 @@
         </li>
 
         <li class="nav-item">
-          <a class="nav-link nav-secondary {% if request.resolver_match.app_name == 'courses' and request.resolver_match.url_name != 'platform_admin_dashboard' %}active-nav{% endif %}"
+          <a class="nav-link nav-secondary {% if request.resolver_match.url_name == 'categories_list' or request.resolver_match.url_name == 'create_category' or request.resolver_match.url_name == 'update_category' or request.resolver_match.url_name == 'delete_category' %}active-nav{% endif %}"
+              href="{% url 'courses:create_category' %}">
+              Categories
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link nav-secondary {% if '/courses/' in request.path and '/categories/' not in request.path and request.resolver_match.app_name == 'courses' and request.resolver_match.url_name != 'platform_admin_dashboard' %}active-nav{% endif %}"
               href="{% url 'courses:courses_dashboard' %}">
               Course
           </a>
