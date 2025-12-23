@@ -144,7 +144,14 @@
         
 
         <!-- Campaigns Dropdown (Desktop only) -->
-        <li class="nav-item dropdown">
+        <li class="nav-item">
+          <a class="nav-link nav-secondary {% if request.resolver_match.app_name == 'campaigns' and request.resolver_match.url_name == 'phishing' %}active-nav{% endif %}"
+             href="{% url 'campaigns:phishing' %}">
+            Campaigns
+          </a>
+        </li>
+      
+        <!-- <li class="nav-item dropdown">
           <a class="nav-link nav-secondary dropdown-toggle"
              href="#"
              role="button"
@@ -156,7 +163,7 @@
             <li><a class="dropdown-item" href="#">Phishing Awareness</a></li>
             <li><a class="dropdown-item" href="#">Security Awareness</a></li>
           </ul>
-        </li>
+        </li> -->
 
         <li class="nav-item divider"></li>
 
