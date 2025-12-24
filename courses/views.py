@@ -19,6 +19,9 @@ from .forms import CourseForm, CourseCategoryForm
 from django.http import JsonResponse
 
 
+from campaigns.models import EmailTemplate
+
+
 
 
 
@@ -55,7 +58,8 @@ def platform_admin_dashboard(request):
     published_courses = Course.objects.filter(is_published=True).count()
     total_companies = Company.objects.filter(status='ACTIVE').count()
     total_categories = CourseCategory.objects.count()
-    
+    total_templates = EmailTemplate.objects.count()
+
     recent_courses = Course.objects.filter(created_by=request.user).order_by('-created_at')[:5]
     
     # ========== SIMPLE EMPLOYEE PROGRESS ==========
@@ -146,7 +150,7 @@ def platform_admin_dashboard(request):
         'total_companies': total_companies,
         'recent_courses': recent_courses,
         'total_categories':total_categories,
-       
+       'total_templates': total_templates,
         
         # Simple progress stats
         'assigned_count': assigned_count,
@@ -183,7 +187,8 @@ def create_course(request):
     if request.method == 'POST':
         form = CourseForm(request.POST, request.FILES)
         quiz_form = QuizForm(request.POST)
-        qset = QuizQuestionFormSet(request.POST, prefix="q")  # 4 questions
+        # qset = QuizQuestionFormSet(request.POST, prefix="q")
+        qset = QuizQuestionFormSet(request.POST)    
 
         if form.is_valid() and quiz_form.is_valid() and qset.is_valid():
             with transaction.atomic():
@@ -259,11 +264,16 @@ def create_course(request):
 
             messages.success(request, f'✅ Course "{course.title}" created with quiz!')
             return redirect('courses:courses_dashboard')
-
+        else:
+            print("❌ COURSE FORM ERRORS:", form.errors)
+            print("❌ QUIZ FORM ERRORS:", quiz_form.errors)
+            print("❌ QUESTION FORMSET ERRORS:", qset.errors)
     else:
         form = CourseForm()
         quiz_form = QuizForm()
-        qset = QuizQuestionFormSet(prefix="q")
+        # qset = QuizQuestionFormSet(prefix="q")
+        qset = QuizQuestionFormSet()
+
 
     return render(request, 'courses/create_course.html', {
         'form': form,

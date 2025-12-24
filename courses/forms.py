@@ -12,7 +12,7 @@ class CourseForm(forms.ModelForm):
         fields = [
             'title', 'brief_description', 'category', 'thumbnail',
             'video_url', 'video_duration_minutes', 'visibility',
-            'points_reward', 'is_published'
+            'is_published'
         ]
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control'}),
@@ -40,11 +40,11 @@ class CourseForm(forms.ModelForm):
 
             'visibility': forms.Select(attrs={'class': 'form-select'}),
 
-            'points_reward': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'min': 0,
-                'placeholder': 'Points for completion'
-            }),
+            # 'points_reward': forms.NumberInput(attrs={
+            #     'class': 'form-control',
+            #     'min': 0,
+            #     'placeholder': 'Points for completion'
+            # }),
 
             'is_published': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }

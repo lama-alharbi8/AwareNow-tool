@@ -2,28 +2,40 @@
 
 {% block title %}Templates Dashboard{% endblock %}
 
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/phishing.css' %}">
+{% endblock %}
+
 {% block content %}
 <div class="container">
 
   <!-- ================= Header ================= -->
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
+    <!-- <div>
       <h3 class="fw-bold mb-0">Email Templates</h3>
       <small class="text-muted">
         Manage phishing email templates
       </small>
-    </div>
+    </div> -->
+    <div class="ph-header">
+      <div class="ph-title">
+        <span class="ph-bar"></span>
+        <h1 class="fw-semibold">Email Templates</h1>
+      </div>
+    </div>     
 
-    <a href="{% url 'campaigns:create_template' %}" class="btn btn-dark">
+    <a href="{% url 'campaigns:create_template' %}" class="btn btn-brand px-4">
       + Create Template
     </a>
   </div>
 
   <!-- ================= Filters ================= -->
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h5 class="fw-semibold mb-0">All Templates</h5>
+    <!-- <h5 class="fw-semibold mb-0">All Templates</h5> -->
 
-    <form method="get" class="d-flex gap-2">
+    <form method="get" class="d-flex gap-2 ms-auto">
       <select name="status" class="form-select form-select-sm">
         <option value="">All Status</option>
         <option value="published" {% if request.GET.status == "published" %}selected{% endif %}>
@@ -34,8 +46,12 @@
         </option>
       </select>
 
-      <button type="submit" class="btn btn-sm btn-outline-dark">
+      <!-- <button type="submit" class="btn btn-sm btn-outline-dark">
         Filter
+      </button> -->
+      <button type="submit"
+              class="btn btn-filter btn-sm px-3">
+              Filter
       </button>
     </form>
   </div>

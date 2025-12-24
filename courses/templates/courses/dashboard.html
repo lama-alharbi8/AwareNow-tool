@@ -3,18 +3,28 @@
 
 {% block title %}Platform Admin Dashboard{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/phishing.css' %}">
+{% endblock %}
+
 {% block content %}
 <div class="container">
 
     <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="ph-header">
+        <div class="ph-title">
+          <span class="ph-bar"></span>
+          <h1 class="fw-semibold">Dashboard</h1>
+        </div>
+      </div>      
+    <!-- <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h3 class="fw-bold mb-0">Platform Admin Dashboard</h3>
             <small class="text-muted">
                 Overview of courses and companies
             </small>
         </div>
-    </div>
+    </div> -->
 
 
        <div class="row mb-4 justify-content-center pt-3 pb-5">
@@ -42,7 +52,7 @@
         <div class="card" style="border-color: #7b1020;">
             <div class="card-body text-center">
                 <h6 class="text-muted">TOTAL TEMPLATES</h6>
-                <h2 class="fw-bold" style="color: #7b1020;">0</h2>
+                <h2 class="fw-bold" style="color: #7b1020;">{{ total_templates }}</h2>
                
             </div>
         </div>
