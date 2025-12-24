@@ -595,6 +595,14 @@ def activate_account(request, token):
         user.is_active = True
         user.activation_token = None
         user.save()
+        if user.role == "EMPLOYEE":
+            EmployeeProfile.objects.get_or_create(
+                user=user,
+                defaults={
+                    "employee_id": f"EMP{user.id:04d}"
+                }
+            )
+
 
         return redirect("account:platform-login")
 
@@ -1206,3 +1214,8 @@ def take_quiz(request, attempt_id):
         print(f"Error in take_quiz: {e}")
         messages.error(request, "Error loading quiz.")
         return redirect('account:employee_dashboard')
+    
+def password_checker(request):
+    """Render the password strength checker page"""
+    
+    return render(request, 'account/password_checker.html')

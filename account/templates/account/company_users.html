@@ -135,7 +135,7 @@
         </div>
     </div>
     <!-- ========= Tab -> user group ======= -->
-    <ul class="nav nav-pills users-tabs mb-4">
+    <ul class="nav users-tabs mb-4">
         <li class="nav-item" >
             <a class="nav-link {% if request.resolver_match.url_name == 'company-users' %}active{% endif %}"
                href="{% url 'account:company-users' %}">
@@ -148,8 +148,8 @@
                 Groups
             </a>
         </li>
-    </ul> -->
-    <ul class="nav users-tabs mb-4">
+    </ul> 
+    <!-- <ul class="nav users-tabs mb-4">
         <li class="nav-item">
           <a class="nav-link {% if request.resolver_match.url_name == 'company-users' %}active{% endif %}"
              href="{% url 'account:company-users' %}">
@@ -162,7 +162,7 @@
             Groups
           </a>
         </li>
-      </ul>      
+      </ul>       -->
 
     <form method="get" class="d-flex gap-2 mb-3 justify-content-end">
 

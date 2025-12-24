@@ -83,8 +83,8 @@
 
         <li class="nav-item">
           <a class="nav-link nav-secondary {% if request.resolver_match.url_name == 'categories_list' or request.resolver_match.url_name == 'create_category' or request.resolver_match.url_name == 'update_category' or request.resolver_match.url_name == 'delete_category' %}active-nav{% endif %}"
-             href="{% url 'courses:create_category' %}">
-            Categories
+              href="{% url 'courses:categories_list' %}">
+              Categories
           </a>
         </li>
 
@@ -128,12 +128,15 @@
           </a>
         </li>
 
-        <li class="nav-item">
-          <a class="nav-link nav-secondary {% if request.resolver_match.app_name == 'policies' %}active-nav{% endif %}"
-             href="{% url 'policies:company_policies' %}">
-            Policies
-          </a>
-        </li>
+    <li class="nav-item">
+      <a class="nav-link nav-secondary
+         {% if request.resolver_match.app_name == 'policies' %}
+           active-nav
+         {% endif %}"
+         href="{% url 'policies:company_policies' %}">
+        Policies
+      </a>
+    </li>
 
         <li class="nav-item">
           <a class="nav-link nav-secondary {% if request.resolver_match.app_name == 'campaigns' and request.resolver_match.url_name == 'phishing' %}active-nav{% endif %}"
@@ -203,8 +206,8 @@
 
         <li class="nav-item">
           <a class="nav-link nav-secondary {% if request.resolver_match.url_name == 'password_checker' %}active-nav{% endif %}"
-             href="#">
-            Password Checker
+              href="{% url 'account:password_checker' %}">
+              Password Checker
           </a>
         </li>
 
@@ -230,8 +233,8 @@
         </li>
 
         <li class="nav-item">
-          <a class="nav-link nav-secondary text-center"
-             href="#">
+          <a class="nav-link nav-secondary text-center" 
+             href="{% url 'account:password_checker' %}">
             Password Checker
           </a>
         </li>
