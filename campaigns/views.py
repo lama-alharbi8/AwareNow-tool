@@ -1,7 +1,8 @@
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Q
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from django.utils import timezone
 from django.template import Template, Context
 
@@ -11,8 +12,38 @@ from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.urls import reverse
 
-from .models import PhishingCampaign, EmailTemplate, CampaignRecipient, PhishingEvent
-from .forms import PhishingCampaignForm
+# ✅ تأكدي هذي المودلز موجودة عندك
+from .models import (
+    PhishingCampaign,
+    EmailTemplate,
+    CampaignRecipient,
+    PhishingEvent,
+    # ✅ أضيفي هذا المودل إذا بتسوين Publish للشركات مثل الكورسات
+    CompanyEmailTemplate,
+)
+
+# ✅ تأكدي الفورم موجود
+from .forms import PhishingCampaignForm, EmailTemplateForm
+
+# ✅ Company model (مثل الكورسات)
+from account.models import Company
+
+
+# ====================
+# PERMISSION CHECK
+# ====================
+def platform_admin_required(view_func):
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return redirect('account:platform-login')
+
+        # نفس منطق الكورس عندك: superuser فقط
+        if not request.user.is_superuser:
+            return HttpResponseForbidden("Platform admin only.")
+
+        return view_func(request, *args, **kwargs)
+
+    return wrapper
 
 
 # =========================
@@ -259,8 +290,7 @@ def publish_and_send(request, campaign_id):
         ctx = Context({
             "first_name": "Hanan",
             "company": "AwareNow",
-            # ✅ أهم سطر: خليه يروح للـ CLICK tracking
-            "tracking_url": click_url,
+            "tracking_url": click_url,   # ✅ مهم: الرابط يروح لتتبع الكليك
             "recipient_email": r.email,
         })
 
@@ -289,9 +319,9 @@ def publish_and_send(request, campaign_id):
     return redirect("campaigns:phishing")
 
 
-
+# =========================
 # Report
-
+# =========================
 @login_required
 def phishing_report(request, campaign_id):
     campaign = get_object_or_404(PhishingCampaign, id=campaign_id)
@@ -315,3 +345,178 @@ def phishing_report(request, campaign_id):
         "recipients": recipients,
         "totals": totals,
     })
+
+
+# ============================================================
+# ===================== PLATFORM: TEMPLATES ==================
+# ============================================================
+
+@login_required
+@platform_admin_required
+def templates_dashboard(request):
+    templates = EmailTemplate.objects.all().order_by("-created_at")
+
+    status = request.GET.get("status", "").strip()
+    if status == "published":
+        templates = templates.filter(is_published=True)
+    elif status == "draft":
+        templates = templates.filter(is_published=False)
+
+    return render(request, "campaigns/templates/templates_dashboard.html", {
+        "templates": templates,
+    })
+
+
+@login_required
+@platform_admin_required
+def create_template(request):
+    today = timezone.now().date()
+    all_companies = Company.objects.filter(
+        license_end_date__gte=today
+    ).order_by("name")
+
+    if request.method == "POST":
+        form = EmailTemplateForm(request.POST, request.FILES)
+        if form.is_valid():
+            template = form.save(commit=False)
+            template.created_by = request.user
+
+            visibility = request.POST.get("visibility")
+
+            # Draft
+            if visibility == "private":
+                template.is_published = False
+                template.is_active = True
+                template.published_at = None
+
+            # Published
+            elif visibility in ["global", "specific"]:
+                template.is_published = True
+                template.is_active = True
+                template.published_at = timezone.now()
+
+            template.visibility = visibility
+            template.save()
+
+            # ✅ Publish logic (مثل الكورسات)
+            if visibility == "global":
+                companies = Company.objects.filter(status="ACTIVE", license_end_date__gte=today)
+                for company in companies:
+                    CompanyEmailTemplate.objects.get_or_create(
+                        company=company,
+                        template=template,
+                        defaults={"assigned_by": request.user}
+                    )
+
+            elif visibility == "specific":
+                company_ids = request.POST.getlist("companies")
+                companies = Company.objects.filter(
+                    id__in=company_ids,
+                    status="ACTIVE",
+                    license_end_date__gte=today
+                )
+                for company in companies:
+                    CompanyEmailTemplate.objects.get_or_create(
+                        company=company,
+                        template=template,
+                        defaults={"assigned_by": request.user}
+                    )
+
+            messages.success(request, f'✅ Template "{template.name}" created!')
+            return redirect("campaigns:templates_dashboard")
+
+    else:
+        form = EmailTemplateForm()
+
+    return render(request, "campaigns/templates/create_template.html", {
+        "form": form,
+        "all_companies": all_companies,
+        "is_edit": False,
+    })
+
+
+@login_required
+@platform_admin_required
+def edit_template(request, template_id):
+    template = get_object_or_404(EmailTemplate, id=template_id)
+
+    today = timezone.now().date()
+    all_companies = Company.objects.filter(
+        license_end_date__gte=today
+    ).order_by("name")
+
+    if request.method == "POST":
+        form = EmailTemplateForm(request.POST, request.FILES, instance=template)
+        if form.is_valid():
+            updated = form.save(commit=False)
+
+            visibility = request.POST.get("visibility")
+
+            # 🚫 ممنوع الرجوع Draft إذا كان Published
+            if template.is_published and visibility == "private":
+                messages.error(request, "❌ You cannot move a published template back to draft.")
+                return redirect("campaigns:templates_dashboard")
+
+            if visibility == "private":
+                updated.is_published = False
+                updated.published_at = None
+
+            elif visibility in ["global", "specific"]:
+                updated.is_published = True
+                if not updated.published_at:
+                    updated.published_at = timezone.now()
+
+            updated.visibility = visibility
+            updated.save()
+
+            # ✅ (اختياري) تحديث التعيين للشركات عند specific/global
+            # لو تبين نحدث الربط عند التعديل قولي لي وبأضيفه لك
+
+            messages.success(request, f'✅ Template "{updated.name}" updated!')
+            return redirect("campaigns:templates_dashboard")
+
+    else:
+        form = EmailTemplateForm(instance=template)
+
+    return render(request, "campaigns/templates/create_template.html", {
+        "form": form,
+        "template": template,
+        "all_companies": all_companies,
+        "is_edit": True,
+    })
+
+
+@login_required
+@platform_admin_required
+def deactivate_template(request, template_id):
+    template = get_object_or_404(EmailTemplate, id=template_id)
+    template.is_active = False
+    template.save(update_fields=["is_active"])
+    messages.success(request, f'Template "{template.name}" deactivated.')
+    return redirect("campaigns:templates_dashboard")
+
+
+@login_required
+@platform_admin_required
+def activate_template(request, template_id):
+    template = get_object_or_404(EmailTemplate, id=template_id)
+    template.is_active = True
+    template.save(update_fields=["is_active"])
+    messages.success(request, f'Template "{template.name}" activated.')
+    return redirect("campaigns:templates_dashboard")
+
+
+@login_required
+@platform_admin_required
+def template_companies_view(request, template_id):
+    template = get_object_or_404(EmailTemplate, id=template_id)
+
+    today = timezone.now().date()
+    companies = list(
+        CompanyEmailTemplate.objects.filter(
+            template=template,
+            company__license_end_date__gte=today
+        ).values_list("company__name", flat=True)
+    )
+
+    return JsonResponse({"companies": companies})
