@@ -1,29 +1,83 @@
 from django.db import models
 from django.utils import timezone
+from django.conf import settings
 import uuid
 
-from account.models import CompanyGroup  # ✅ ربط القروب الحقيقي
+from account.models import Company, CompanyGroup
 
 
+# Email Template (Platform Admin)
 class EmailTemplate(models.Model):
-    name = models.CharField(max_length=120)
-    subject = models.CharField(max_length=200, blank=True)
+    VISIBILITY_CHOICES = (
+        ('private', 'Draft'),
+        ('global', 'All Companies'),
+        ('specific', 'Specific Companies'),
+    )
+
+    name = models.CharField(max_length=255)
+    subject = models.CharField(max_length=255)
+    html_content = models.TextField()
 
     preview_image = models.ImageField(
-        upload_to="phishing_templates/",
+        upload_to='email_templates/',
         blank=True,
         null=True
     )
 
-    html_content = models.TextField()  # HTML email body
-
+    # Publishing
+    is_published = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
+    visibility = models.CharField(
+        max_length=20,
+        choices=VISIBILITY_CHOICES,
+        default='private'
+    )
+
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
+    published_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return self.name
 
 
+# Company ↔ EmailTemplate (Publish mapping)
+class CompanyEmailTemplate(models.Model):
+    company = models.ForeignKey(
+        Company,
+        on_delete=models.CASCADE,
+        related_name='email_templates'
+    )
+
+    template = models.ForeignKey(
+        EmailTemplate,
+        on_delete=models.CASCADE,
+        related_name='company_assignments'
+    )
+
+    assigned_at = models.DateTimeField(auto_now_add=True)
+
+    assigned_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+
+    class Meta:
+        unique_together = ('company', 'template')
+
+    def __str__(self):
+        return f"{self.company.name} → {self.template.name}"
+
+
+# Phishing Campaign
 class PhishingCampaign(models.Model):
     STATUS_CHOICES = (
         ("draft", "Draft"),
@@ -33,7 +87,6 @@ class PhishingCampaign(models.Model):
 
     title = models.CharField(max_length=150)
 
-    # ✅ بدل CharField: ربط بالحقل الحقيقي CompanyGroup
     user_group = models.ForeignKey(
         CompanyGroup,
         on_delete=models.PROTECT,
@@ -44,10 +97,7 @@ class PhishingCampaign(models.Model):
 
     sender = models.EmailField()
 
-    scheduled_date = models.DateField(
-        null=True,
-        blank=True
-    )
+    scheduled_date = models.DateField(null=True, blank=True)
 
     status = models.CharField(
         max_length=20,
@@ -55,7 +105,6 @@ class PhishingCampaign(models.Model):
         default="draft"
     )
 
-    # ✅ الربط مع التيمبلت
     template = models.ForeignKey(
         EmailTemplate,
         on_delete=models.PROTECT,
@@ -70,12 +119,14 @@ class PhishingCampaign(models.Model):
         return self.title
 
 
+# Campaign Recipient
 class CampaignRecipient(models.Model):
     campaign = models.ForeignKey(
-        "PhishingCampaign",
+        PhishingCampaign,
         on_delete=models.CASCADE,
         related_name="recipients"
     )
+
     email = models.EmailField()
     token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
 
@@ -88,7 +139,7 @@ class CampaignRecipient(models.Model):
         unique_together = ("campaign", "email")
 
     def __str__(self):
-        return f"{self.email} ({self.campaign_id})"
+        return f"{self.email} ({self.campaign.title})"
 
     @property
     def opened(self):
@@ -103,6 +154,7 @@ class CampaignRecipient(models.Model):
         return self.fallen_at is not None
 
 
+# Phishing Events (Open / Click / Fall)
 class PhishingEvent(models.Model):
     class EventType(models.TextChoices):
         OPEN = "open", "Open"
@@ -112,20 +164,20 @@ class PhishingEvent(models.Model):
     id = models.BigAutoField(primary_key=True)
 
     campaign = models.ForeignKey(
-        "PhishingCampaign",
+        PhishingCampaign,
         on_delete=models.CASCADE,
         related_name="events"
     )
 
     recipient = models.ForeignKey(
-        "CampaignRecipient",
+        CampaignRecipient,
         on_delete=models.CASCADE,
         related_name="events"
     )
 
     event_type = models.CharField(max_length=10, choices=EventType.choices)
 
-    target_url = models.URLField(max_length=1000, blank=True)   # للـ click
+    target_url = models.URLField(max_length=1000, blank=True)
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     user_agent = models.CharField(max_length=512, blank=True)
 

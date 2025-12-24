@@ -39,20 +39,19 @@
         >
       </a>
 
-      <!-- Home (Desktop only  -->
-      {# ===== Home (Desktop only) ===== #}
-
+      <!-- ===== Home (Platform Admin – Desktop) ===== -->
       {% if user.is_authenticated and user.is_superuser %}
         <a class="nav-link fw-normal d-none d-lg-block {% if request.resolver_match.app_name == 'courses' and request.resolver_match.url_name == 'platform_admin_dashboard' %}active-nav{% endif %}"
-            href="{% url 'courses:platform_admin_dashboard' %}">
-            Home
+           href="{% url 'courses:platform_admin_dashboard' %}">
+          Home
         </a>
       {% endif %}
 
+      <!-- ===== Home (Company Admin – Desktop) ===== -->
       {% if user.is_authenticated and user.role == "COMPANY_ADMIN" %}
         <a class="nav-link fw-normal d-none d-lg-block {% if request.resolver_match.app_name == 'account' and request.resolver_match.url_name == 'company-dashboard' %}active-nav{% endif %}"
-            href="{% url 'account:company-dashboard' %}">
-            Home
+           href="{% url 'account:company-dashboard' %}">
+          Home
         </a>
       {% endif %}
 
@@ -77,33 +76,14 @@
     <!-- ================= Right ================= -->
     <div class="collapse navbar-collapse justify-content-end" id="mainNavbar">
 
-      <!-- ===== Mobile Home ===== -->
-      <ul class="navbar-nav d-lg-none align-items-center">
-        {% if user.is_authenticated and user.is_superuser %}
-          <li class="nav-item">
-            <a class="nav-link fw-medium text-center"
-               href="{% url 'courses:platform_admin_dashboard' %}">
-              Home
-            </a>
-          </li>
-        {% elif user.is_authenticated and user.role == "COMPANY_ADMIN" %}
-          <li class="nav-item">
-            <a class="nav-link fw-medium text-center"
-               href="{% url 'account:company-dashboard' %}">
-              Home
-            </a>
-          </li>
-        {% endif %}
-      </ul>
-
       <!-- ================= Platform Admin ================= -->
       {% if user.is_authenticated and user.is_superuser %}
       <ul class="navbar-nav align-items-center gap-3">
 
         <li class="nav-item">
           <a class="nav-link nav-secondary {% if request.resolver_match.app_name == 'account' and request.resolver_match.url_name == 'platform-dashboard' %}active-nav{% endif %}"
-              href="{% url 'account:platform-dashboard' %}">
-              Companies
+             href="{% url 'account:platform-dashboard' %}">
+            Companies
           </a>
         </li>
 
@@ -121,10 +101,11 @@
           </a>
         </li>
 
+        <!-- ✅ Template (FIXED) -->
         <li class="nav-item">
-          <a class="nav-link nav-secondary {% if request.resolver_match.app_name == 'templates_app' %}active-nav{% endif %}"
-              href="#">
-              Template
+          <a class="nav-link nav-secondary {% if request.resolver_match.app_name == 'campaigns' and request.resolver_match.url_name == 'templates_dashboard' %}active-nav{% endif %}"
+             href="{% url 'campaigns:templates_dashboard' %}">
+            Template
           </a>
         </li>
 
@@ -140,49 +121,42 @@
       </ul>
       {% endif %}
 
-<!-- ================= Company Admin ================= -->
-{% if user.is_authenticated and user.role == "COMPANY_ADMIN" %}
+      <!-- ================= Company Admin ================= -->
+      {% if user.is_authenticated and user.role == "COMPANY_ADMIN" %}
+      <ul class="navbar-nav align-items-center gap-3 d-none d-lg-flex">
 
-<!-- Desktop menu -->
-<ul class="navbar-nav align-items-center gap-3 d-none d-lg-flex">
-
-  <li class="nav-item">
-    <a class="nav-link nav-secondary {% if request.resolver_match.url_name in 'company-users company-groups' %}active-nav{% endif %}"
-        href="{% url 'account:company-users' %}">
-        Users
-    </a>
-  </li>
-
-    <!-- <li class="nav-item">
-      <a class="nav-link nav-secondary" href="#">Library</a>
-    </li> -->
+        <li class="nav-item">
+          <a class="nav-link nav-secondary {% if request.resolver_match.url_name == 'company-users' or request.resolver_match.url_name == 'company-groups' %}active-nav{% endif %}"
+             href="{% url 'account:company-users' %}">
+            Users
+          </a>
+        </li>
 
     <li class="nav-item">
       <a class="nav-link nav-secondary
          {% if request.resolver_match.app_name == 'policies' %}
            active-nav
          {% endif %}"
-         href="{% url 'policies:company_policies' %}">
+         href="{% url 'policies:policy_list' %}">
         Policies
       </a>
     </li>
 
-  <!-- Campaigns (Single link – no dropdown) -->
-  <li class="nav-item">
-    <a class="nav-link nav-secondary {% if request.resolver_match.app_name == 'campaigns' and request.resolver_match.url_name == 'phishing' %}active-nav{% endif %}"
-       href="{% url 'campaigns:phishing' %}">
-      Campaigns
-    </a>
-  </li>
+        <li class="nav-item">
+          <a class="nav-link nav-secondary {% if request.resolver_match.app_name == 'campaigns' and request.resolver_match.url_name == 'phishing' %}active-nav{% endif %}"
+             href="{% url 'campaigns:phishing' %}">
+            Campaigns
+          </a>
+        </li>
 
-  <li class="nav-item divider"></li>
+        <li class="nav-item divider"></li>
 
-  <li class="nav-item">
-    <a class="nav-logout nav-link fw-normal"
-       href="{% url 'account:logout' %}">
-      logout
-    </a>
-  </li>
+        <li class="nav-item">
+          <a class="nav-logout nav-link fw-normal"
+             href="{% url 'account:logout' %}">
+            logout
+          </a>
+        </li>
 
 </ul>
 
@@ -296,11 +270,12 @@
       </ul>
 
       {% endif %}
+
     </div>
   </div>
 </nav>
 
-<!-- Page wrapper -->
+<!-- ================= Page Content ================= -->
 <main class="container-fluid px-3 px-md-4 py-4">
   {% block content %}{% endblock %}
 </main>
