@@ -73,4 +73,4 @@ AwareNow addresses these challenges by providing:
 - Hind Abdullah**
 - Rayhanah Alolaywi
 - Hanan Aldayel
-- Lama
+- Lama Alharbi
